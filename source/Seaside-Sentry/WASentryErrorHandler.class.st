@@ -2,7 +2,8 @@ Class {
 	#name : #WASentryErrorHandler,
 	#superclass : #WAErrorHandler,
 	#instVars : [
-		'parentHandler'
+		'parentHandler',
+		'async'
 	],
 	#category : #'Seaside-Sentry-Handler'
 }
@@ -15,17 +16,38 @@ WASentryErrorHandler class >> context: aRequestContext parentHandler: anExceptio
 		  yourself
 ]
 
+{ #category : #accessing }
+WASentryErrorHandler >> async [
+
+	^ async ifNil: [ async := false ]
+]
+
+{ #category : #accessing }
+WASentryErrorHandler >> async: aBoolean [
+
+	async := aBoolean
+]
+
 { #category : #actions }
 WASentryErrorHandler >> handleError: exception [
 
 	self sentryFilter ifNotNil: [ :filter | 
-		[ 
-		| client |
-		client := filter client.
-		filter contextBlock ifNotNil: [ :block | block value: self ].
-		client captureException: exception in: filter eventBlock ] forkAt:
-			Processor userBackgroundPriority ].
+		self async
+			ifTrue: [ 
+				[ 
+				[ self handleException: exception fromFilter: filter ] forkAt:
+					Processor userBackgroundPriority ] ]
+			ifFalse: [ self handleException: exception fromFilter: filter ] ].
 	^ (parentHandler context: requestContext) handleError: exception
+]
+
+{ #category : #actions }
+WASentryErrorHandler >> handleException: exception fromFilter: filter [
+
+	| client |
+	client := filter client.
+	filter contextBlock ifNotNil: [ :block | block value: self ].
+	^ client captureException: exception in: filter eventBlock
 ]
 
 { #category : #accessing }

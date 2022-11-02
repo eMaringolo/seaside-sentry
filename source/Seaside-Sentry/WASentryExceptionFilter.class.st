@@ -14,10 +14,23 @@ Class {
 	#superclass : #WAExceptionFilter,
 	#instVars : [
 		'eventBlock',
-		'contextBlock'
+		'contextBlock',
+		'async'
 	],
 	#category : #'Seaside-Sentry-Filter'
 }
+
+{ #category : #accessing }
+WASentryExceptionFilter >> async [
+
+	^ async ifNil: [ async := false ]
+]
+
+{ #category : #accessing }
+WASentryExceptionFilter >> async: anObject [
+
+	async := anObject
+]
 
 { #category : #processing }
 WASentryExceptionFilter >> client [
@@ -71,6 +84,7 @@ WASentryExceptionFilter >> handleFiltered: aRequestContext [
 	handler := WASentryErrorHandler
 		           context: aRequestContext
 		           parentHandler: self parentExceptionHandler.
+	handler async: self async.
 	handler handleExceptionsDuring: [ 
 		WACurrentExceptionHandler
 			use: handler
