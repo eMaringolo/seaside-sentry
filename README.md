@@ -1,12 +1,23 @@
 # seaside-sentry
 Integration of Sentry error tracking platform as Seaside middleware
 
+# Installation
+
+```smalltalk
+Metacello new 
+  baseline: 'SeasideSentry'; 
+  repository: 'github://eMaringolo/seaside-sentry/source'; 
+  load.
+```
 
 # How to use
 
+`WASentryExceptionFilter` is just another exception handler, but it contains a "parent" handler, which is the regular exception handler class that will likely report the exception to the user.
+
+
 ```smalltalk
 handler := WAAdmin defaultDispacher handlerAt: 'yourApp'.
-filter := WASentryException Filter new.
+filter := WASentryExceptionFilter new.
 Sentry showNotification: false.
 handler addFilter: filter.
 handler exceptionHandler: WASentryErrorHandler.
